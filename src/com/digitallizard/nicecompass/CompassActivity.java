@@ -14,7 +14,7 @@ public class CompassActivity extends Activity {
 
 	public void onPause() {
 		// unregister from the compass to prevent undue battery drain
-		compass.unregisterCompass();
+		compass.unregisterSensors();
 		// call the superclass
 		super.onPause();
 	}
@@ -22,8 +22,8 @@ public class CompassActivity extends Activity {
 	public void onResume() {
 		// class the superclass
 		super.onResume();
-		// register to recieve events from the compass
-		compass.registerCompass();
+		// register to receive events from the compass
+		compass.registerSensors();
 	}
 	
 	@Override
@@ -31,7 +31,7 @@ public class CompassActivity extends Activity {
         super.onCreate(savedInstanceState);
         
         // initialize variables
-        compass = new CompassManager();
+        compass = new CompassManager(this);
         
         // create the gui
         setContentView(R.layout.main);

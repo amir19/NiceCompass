@@ -8,4 +8,10 @@
 <resources>
     <string name="hello">Hello World, CompassActivity!</string>
     <string name="app_name">NiceCompass</string>
+    <string name="magnetic_north">Magnetic North</string>
+    <string name="true_north">True North</string>
+    <string name="settings_category_general">General</string>
+    <string name="settings_item_north">North Reference</string>
+    <string name="preference_key_north">north</string>
+    <string name="settings_summary_north">True or magnetic north?</string>
 </resources>
