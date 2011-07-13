@@ -13,11 +13,11 @@ import android.view.SurfaceView;
 
 public class CompassSurface extends SurfaceView implements Runnable {
 	/** constants **/
-	private static final int TARGET_FPS = 24;
+	private static final int TARGET_FPS = 30;
 	private static final int MINIMUM_SLEEP_TIME = 10;
 	
 	private static final int REQUIRED_BEARING_CHANGE = 8;
-	private static final int REQUIRED_BEARING_REPEAT = 40;
+	private static final int REQUIRED_BEARING_REPEAT = 50;
 	
 	private static final float COMPASS_ACCEL_RATE = 0.9f;
 	private static final float COMPASS_SPEED_MODIFIER = 0.3f;
