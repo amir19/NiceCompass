@@ -70,8 +70,17 @@ public class CompassManager implements SensorEventListener {
 		return orientationDataCache;
 	}
 	
+	public synchronized boolean isActive() {
+		// are the sensors registered
+		return sensorsRegistered;
+	}
+	
 	public int getAccuracy(){
 		return magAccuracy;
+	}
+	
+	public String getCardinal(boolean trueNorth) {
+		return CardinalConverter.cardinalFromBearing(getBearing(trueNorth));
 	}
 	
 	public float getBearing(boolean trueNorth) {

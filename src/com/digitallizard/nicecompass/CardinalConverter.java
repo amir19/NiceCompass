@@ -8,7 +8,7 @@ public class CardinalConverter {
 	public static final String SOUTH = "S";
 	public static final String SOUTH_EAST = "SE";
 	public static final String EAST = "E";
-	public static final String NORTH_EAST = "E";
+	public static final String NORTH_EAST = "NE";
 	
 	public static String cardinalFromBearing(float bearing) {
 		// convert it to be positive, and call the main function
