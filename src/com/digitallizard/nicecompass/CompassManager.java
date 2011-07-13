@@ -6,6 +6,8 @@
  ******************************************************************************/
 package com.digitallizard.nicecompass;
 
+import java.util.Arrays;
+
 import android.content.Context;
 import android.hardware.GeomagneticField;
 import android.hardware.Sensor;
@@ -22,7 +24,10 @@ public class CompassManager implements SensorEventListener {
 	/** constants **/
 	private static final int LOCATION_UPDATE_MIN_TIME = 60000; // the min time in millisecs
 	private static final int LOCATION_UPDATE_MIN_DISTANCE = 10000; // the min distance in metres
-	public static final String[] COMPASS_ACCURACY_MESSAGES = new String[] {"Unreliable", "Low accuracy", "Medium accuracy", "High accuracy"};
+	public static final int STATUS_GOOD = 0;
+	public static final int STATUS_INTERFERENCE = 1;
+	public static final int STATUS_INACTIVE = 2;
+	private static final float MAGNETIC_INTERFERENCE_THRESHOLD_MODIFIER = 1.05f;
 	
 	/** variables **/
 	private Context context;
@@ -31,28 +36,51 @@ public class CompassManager implements SensorEventListener {
 	private final SensorManager sensorManager;
 	private final Sensor magSensor;
 	private final Sensor accelSensor;
+	private GeomagneticField geoField;
 	private boolean sensorsRegistered; // stores the event listener state
 	private boolean sensorHasNewData; // improves performance by only computing the data when required
 	private float[] magValues;
 	private float[] accelValues;
-	private int magAccuracy;
 	private float[] orientationDataCache;
 	private Location locationCache;
-	private float declinationCache;
+	private int status;
 	
-	void updateDelcinationCache() {
+	void interferenceTest(float[] values) {
+		// get the expected values
+		float threshold = getExpectedFieldStrength() * MAGNETIC_INTERFERENCE_THRESHOLD_MODIFIER;
+		float totalStrength = 1f;
+		// loop through the values and test that they are not more than X% above the expected values
+		for(int i = 0; i < values.length; i++){
+			totalStrength *= values[i];
+		}
+		if(totalStrength > threshold){
+			// report possible interference
+			status = STATUS_INTERFERENCE;
+		} else {
+			status = STATUS_GOOD;
+		}
+	}
+	
+	float getExpectedFieldStrength(){
+		// a geo field is required for accurate data
+		if(geoField != null){
+			return geoField.getFieldStrength();
+		} else {
+			// provide a field strength over average
+			return 60*60*60f;
+		}
+	}
+	
+	void updateGeoField() {
 		Location location = getLocation();
-		// if there is no location yet, just use the normal bearing
+		// we can do nothing without location
 		if(location != null) {
-			GeomagneticField geoField = new GeomagneticField(
+			// update the geomagnetic field
+			geoField = new GeomagneticField(
 		             Double.valueOf(location.getLatitude()).floatValue(),
 		             Double.valueOf(location.getLongitude()).floatValue(),
 		             Double.valueOf(location.getAltitude()).floatValue(),
 		             System.currentTimeMillis());
-			declinationCache = geoField.getDeclination(); // convert magnetic north into true north
-		}
-		else {
-			declinationCache = 0f; // set the declination to 0
 		}
 	}
 	
@@ -72,7 +100,6 @@ public class CompassManager implements SensorEventListener {
         SensorManager.getRotationMatrix(R, I, accelValues, magValues);
         orientationDataCache = new float[3];
         SensorManager.getOrientation(R, orientationDataCache);
-
 		
 		// flag the data as computed
 		sensorHasNewData = false;
@@ -86,12 +113,18 @@ public class CompassManager implements SensorEventListener {
 		return sensorsRegistered;
 	}
 	
-	public int getAccuracy() {
-		return magAccuracy;
+	public int getStatus() {
+		return status;
 	}
 	
 	public float getDeclination() {
-		return declinationCache;
+		// if there is no geomagnetic field, just use the normal bearing
+		if(geoField != null) {
+			return geoField.getDeclination(); // convert magnetic north into true north
+		}
+		else {
+			return 0f; // set the declination to 0
+		}
 	}
 	
 	public String getCardinal(boolean trueNorth) {
@@ -139,6 +172,7 @@ public class CompassManager implements SensorEventListener {
 			sensorManager.unregisterListener(this, magSensor);
 			sensorManager.unregisterListener(this, accelSensor);
 			sensorsRegistered = false;
+			status = STATUS_INACTIVE;
 		}
 	}
 	
@@ -157,7 +191,8 @@ public class CompassManager implements SensorEventListener {
 		switch(event.sensor.getType()){
 		case Sensor.TYPE_MAGNETIC_FIELD:
 			magValues = event.values.clone();
-			magAccuracy = event.accuracy;
+			// check for interference
+			interferenceTest(magValues);
 			sensorHasNewData = true;
 			break;
 		case Sensor.TYPE_ACCELEROMETER:
@@ -201,7 +236,7 @@ public class CompassManager implements SensorEventListener {
 			public void onLocationChanged(Location location) {
 				// store the new location
 				locationCache = location;
-				updateDelcinationCache(); // update the declination
+				updateGeoField(); // update the geomagnetic field
 			}
 		};
 	}

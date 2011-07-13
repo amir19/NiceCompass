@@ -17,7 +17,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private static final int MINIMUM_SLEEP_TIME = 10;
 	
 	private static final int REQUIRED_BEARING_CHANGE = 8;
-	private static final int REQUIRED_BEARING_REPEAT = 50;
+	private static final int REQUIRED_BEARING_REPEAT = 50; 
 	
 	private static final float COMPASS_ACCEL_RATE = 0.9f;
 	private static final float COMPASS_SPEED_MODIFIER = 0.3f;
@@ -31,7 +31,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private boolean useTrueNorth;
 	private float currentFps;
 	
-	private String accuracyText;
+	private String statusText;
 	
 	private float bearing;
 	private int repeatedBearingCount;
@@ -56,7 +56,17 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	}
 	
 	void updateAccuracy() {
-		accuracyText = CompassManager.COMPASS_ACCURACY_MESSAGES[compass.getAccuracy()];
+		int status = compass.getStatus();
+		switch(status){
+		case CompassManager.STATUS_INTERFERENCE:
+			statusText = "INTERFERENCE DETECTED!";
+			break;
+		case CompassManager.STATUS_INACTIVE:
+			statusText = "COMPASS INACTIVE";
+			break;
+			default:
+				statusText = "";
+		}
 	}
 	
 	void updateCompass() {
@@ -164,7 +174,8 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		canvas.restore();
 		
 		// draw the accuracy meter
-		canvas.drawText(accuracyText, (canvas.getWidth() / 2) - getTextCenterOffset(accuracyText, greyPaint), canvas.getHeight() - (canvas.getHeight() / 7), greyPaint);
+		redPaint.setTextSize(25f);
+		canvas.drawText(statusText, (canvas.getWidth() / 2) - getTextCenterOffset(statusText, redPaint), canvas.getHeight() - 30, redPaint);
 		
 		// draw the fps
 		greyPaint.setTextSize(15f);
