@@ -146,8 +146,8 @@ public class CompassManager implements SensorEventListener {
 		if(!sensorsRegistered) {
 			// register our sensor listeners
 			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_UPDATE_MIN_TIME, LOCATION_UPDATE_MIN_DISTANCE, locationListener);
-			sensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
-			sensorManager.registerListener(this, accelSensor, SensorManager.SENSOR_DELAY_NORMAL);
+			sensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_UI);
+			sensorManager.registerListener(this, accelSensor, SensorManager.SENSOR_DELAY_UI);
 			sensorsRegistered = true;
 		}
 	}
@@ -168,7 +168,6 @@ public class CompassManager implements SensorEventListener {
 	}
 	
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
-		
 	} 
 	
 	public CompassManager(Context context) {
