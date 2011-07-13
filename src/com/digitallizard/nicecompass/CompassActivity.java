@@ -11,6 +11,7 @@ import android.os.Bundle;
 
 public class CompassActivity extends Activity {
 	private CompassManager compass;
+	private CompassSurface surface;
 
 	public void onPause() {
 		// unregister from the compass to prevent undue battery drain
@@ -32,6 +33,7 @@ public class CompassActivity extends Activity {
         
         // initialize variables
         compass = new CompassManager(this);
+        surface = new CompassSurface(this);
         
         // create the gui
         setContentView(R.layout.main);
