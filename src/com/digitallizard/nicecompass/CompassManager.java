@@ -22,6 +22,7 @@ public class CompassManager implements SensorEventListener {
 	/** constants **/
 	private static final int LOCATION_UPDATE_MIN_TIME = 60000; // the min time in millisecs
 	private static final int LOCATION_UPDATE_MIN_DISTANCE = 10000; // the min distance in metres
+	public static final String[] COMPASS_ACCURACY_MESSAGES = new String[] {"Unreliable", "Low accuracy", "Medium accuracy", "High accuracy"};
 	
 	/** variables **/
 	private Context context;
@@ -37,16 +38,26 @@ public class CompassManager implements SensorEventListener {
 	private int magAccuracy;
 	private float[] orientationDataCache;
 	private Location locationCache;
+	private float declinationCache;
+	
+	void updateDelcinationCache() {
+		Location location = getLocation();
+		// if there is no location yet, just use the normal bearing
+		if(location != null) {
+			GeomagneticField geoField = new GeomagneticField(
+		             Double.valueOf(location.getLatitude()).floatValue(),
+		             Double.valueOf(location.getLongitude()).floatValue(),
+		             Double.valueOf(location.getAltitude()).floatValue(),
+		             System.currentTimeMillis());
+			declinationCache = geoField.getDeclination(); // convert magnetic north into true north
+		}
+		else {
+			declinationCache = 0f; // set the declination to 0
+		}
+	}
 	
 	float convertToTrueNorth(float bearing){
-		Location location = getLocation();
-		GeomagneticField geoField = new GeomagneticField(
-	             Double.valueOf(location.getLatitude()).floatValue(),
-	             Double.valueOf(location.getLongitude()).floatValue(),
-	             Double.valueOf(location.getAltitude()).floatValue(),
-	             System.currentTimeMillis());
-		bearing += geoField.getDeclination(); // convert magnetic north into true north
-		return bearing;
+		return bearing + getDeclination();
 	}
 	
 	float[] getOrientationData() {
@@ -75,8 +86,12 @@ public class CompassManager implements SensorEventListener {
 		return sensorsRegistered;
 	}
 	
-	public int getAccuracy(){
+	public int getAccuracy() {
 		return magAccuracy;
+	}
+	
+	public float getDeclination() {
+		return declinationCache;
 	}
 	
 	public String getCardinal(boolean trueNorth) {
@@ -154,7 +169,7 @@ public class CompassManager implements SensorEventListener {
 	
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
 		
-	}
+	} 
 	
 	public CompassManager(Context context) {
 		// initialize variables
@@ -187,6 +202,7 @@ public class CompassManager implements SensorEventListener {
 			public void onLocationChanged(Location location) {
 				// store the new location
 				locationCache = location;
+				updateDelcinationCache(); // update the declination
 			}
 		};
 	}

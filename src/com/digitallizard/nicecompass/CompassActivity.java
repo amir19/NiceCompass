@@ -43,7 +43,7 @@ public class CompassActivity extends Activity {
         
         // initialize variables
         compass = new CompassManager(this);
-        surface = new CompassSurface(this, compass);
+        surface = new CompassSurface(this, compass, true);
         surfaceContainer = (LinearLayout)findViewById(R.id.compassSurfaceContainer);
         
         // add the compass
