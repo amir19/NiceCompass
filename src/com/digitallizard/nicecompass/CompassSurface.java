@@ -19,20 +19,37 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private static final int REQUIRED_BEARING_REPEAT = 40;
 	
 	/** variables **/
-	private Context context;
 	private CompassManager compass;
 	private Thread animationThread;
 	private volatile boolean isRunning;
 	private DecimalFormat bearingFormat;
 	private boolean useTrueNorth;
+	private float currentFps;
 	
 	private float bearing;
 	private int repeatedBearingCount;
 	private volatile String bearingText;
 	
-	void update(float delta) {
-		// update the values
-		// TODO perform updates
+	private float compassCurrentBearing;
+	private float compassSpeed;
+	private float compassAccel;
+	
+	
+	float getTextCenterOffset(String text, Paint paint) {
+		float[] widths = new float[text.length()];
+		paint.getTextWidths(text, widths);
+		float totalWidth = 0;
+		for(int i = 0; i < text.length(); i++){
+			totalWidth += widths[i];
+		}
+		return totalWidth / 2;
+	}
+	
+	void updateCompass() {
+		
+	}
+	
+	void updateBearing() {
 		// work out the bearing, dampening jitter
 		float newBearing = compass.getPositiveBearing(useTrueNorth);
 		if(Math.abs(bearing - newBearing) > REQUIRED_BEARING_CHANGE) {
@@ -48,9 +65,11 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		bearingText = bearingFormat.format(bearing);
 		bearingText += "\u00B0 "; // add the degrees symbol
 		bearingText += CardinalConverter.cardinalFromPositiveBearing(bearing); // add the cardinal information
+	}
+	
+	void update(float delta) {
+		updateBearing();
 		
-		// draw what has been created
-		triggerDraw();
 	}
 	
 	synchronized void triggerDraw() {
@@ -79,9 +98,11 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		textPaint.setTextSize(70f);
 		
 		// draw the bearing information
-		canvas.drawText(bearingText, canvas.getWidth() / 2, canvas.getHeight() / 5, textPaint);
+		canvas.drawText(bearingText, (canvas.getWidth() / 2) - getTextCenterOffset(bearingText, textPaint), canvas.getHeight() / 5, textPaint);
 		
-		//canv
+		// draw the fps
+		textPaint.setTextSize(15f);
+		canvas.drawText(Float.toString(currentFps) + " FPS", 5, canvas.getHeight() - 10, textPaint);
 	}
 	
 	public void stopAnimation() {
@@ -105,14 +126,16 @@ public class CompassSurface extends SurfaceView implements Runnable {
 			
 			// update the animation
 			update(1); // TODO set up a delta system
+			triggerDraw(); // draw the update
 			
 			// work out how long to sleep for
 			long finishTime = System.currentTimeMillis();
 			long requiredSleepTime = maxSleepTime - (finishTime - startTime);
 			// check if the sleep time was too low
-			if(requiredSleepTime < MINIMUM_SLEEP_TIME) {
+			if(requiredSleepTime < MINIMUM_SLEEP_TIME) {  
 				requiredSleepTime = MINIMUM_SLEEP_TIME;
 			}
+			currentFps = 1000 / (requiredSleepTime + (finishTime - startTime));
 			// try to sleep for this time
 			try {
 				Thread.sleep(requiredSleepTime);
@@ -124,7 +147,6 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	
 	public CompassSurface(Context context, CompassManager compass) {
 		super(context);
-		this.context = context;
 		this.compass = compass;
 		useTrueNorth = false;
 		
