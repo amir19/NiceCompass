@@ -7,8 +7,10 @@
 package com.digitallizard.nicecompass;
 
 import android.app.Activity;
+import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Window;
 import android.widget.LinearLayout;
 
 public class CompassActivity extends Activity {

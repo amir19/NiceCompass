@@ -4,12 +4,18 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.SurfaceView;
+import android.view.Window;
 
 public class CompassSurface extends SurfaceView implements Runnable {
 	/** constants **/
@@ -18,6 +24,11 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	
 	private static final int REQUIRED_BEARING_CHANGE = 5;
 	private static final int REQUIRED_BEARING_REPEAT = 40; 
+	
+	private static final float INNER_COMPASS_CARD_RATIO = 7f / 11f;
+	/*private static final int GREATER_DIVISION_INTERVAL = 90;
+	private static final int DIVISION_TEXT_INTERVAL = 15;
+	private static final int DIVISION_INCREMENT = 5; // must be factor of 360*/
 	
 	private static final float COMPASS_ACCEL_RATE = 0.9f;
 	private static final float COMPASS_SPEED_MODIFIER = 0.26f;
@@ -31,6 +42,17 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private boolean useTrueNorth;
 	private float currentFps;
 	
+	// images
+	private Bitmap background;
+	private Bitmap card;
+	
+	// paint
+	Paint imagePaint;
+	Paint blackPaint;
+	Paint greyPaint;
+	Paint darkGreyPaint;
+	Paint redPaint;
+	
 	private String statusText;
 	
 	private float bearing;
@@ -42,8 +64,26 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	
 	private float compassCurrentBearing;
 	private float compassSpeed;
-	private float compassAccel;
 	
+	private long totalFrames;
+	private long totalTime;
+	
+	
+	void initDrawing() {
+		//background = BitmapFactory.decodeResource(getResources(), R.drawable.background);
+		card = BitmapFactory.decodeResource(getResources(), R.drawable.card);
+		
+		imagePaint = new Paint();
+		imagePaint.setDither(true);
+		blackPaint = new Paint();
+		blackPaint.setColor(Color.BLACK);
+		greyPaint = new Paint();  
+		greyPaint.setARGB(255, 179, 179, 179);
+		darkGreyPaint = new Paint();
+		darkGreyPaint.setARGB(255, 112, 112, 112);
+		redPaint = new Paint();
+		redPaint.setColor(Color.RED);
+	}
 	
 	float getTextCenterOffset(String text, Paint paint) {
 		float[] widths = new float[text.length()];
@@ -151,27 +191,43 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	public void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
 		
-		canvas.drawColor(Color.BLACK); // blank the screen
-		
-		// initialize paint
-		Paint greyPaint = new Paint();
-		greyPaint.setColor(Color.GRAY);
-		Paint redPaint = new Paint();
-		redPaint.setColor(Color.RED);
+		// work out scale factors for percent
+		float widthScale = canvas.getWidth() / 100f;
+		float heightScale = canvas.getHeight() / 100f;
+
+		//canvas.drawColor(Color.BLACK); // blank the screen
+		canvas.drawARGB(255, 24, 24, 24);
+		//canvas.drawBitmap(background, null, new Rect(0, 0, canvas.getWidth(), canvas.getHeight()), imagePaint);
+		//canvas.drawBitmap(background, 0, 0, imagePaint);
 		
 		// draw the bearing information
 		greyPaint.setTextSize(70f);
-		canvas.drawText(bearingText, (canvas.getWidth() / 2) - getTextCenterOffset(bearingText, greyPaint), canvas.getHeight() / 6, greyPaint);
+		canvas.drawText(bearingText, (50 * widthScale) - getTextCenterOffset(bearingText, greyPaint), 15 * heightScale, greyPaint);
 		greyPaint.setTextSize(25f);
-		canvas.drawText(declenationText, (canvas.getWidth() / 2) - getTextCenterOffset(declenationText, greyPaint), (canvas.getHeight() / 6) + 45, greyPaint);
+		canvas.drawText(declenationText, (50 * widthScale) - getTextCenterOffset(declenationText, greyPaint), 20 * heightScale, greyPaint);
 		
-		// draw the compass
-		canvas.rotate(compassCurrentBearing * -1, canvas.getWidth() / 2, 400);
-		Rect needle = new Rect(230, 200, 250, 600);
+		// draw the inside of the compass card
+		int cardDiameter = (int)Math.floor(90 * widthScale);
+		canvas.drawCircle(50 * widthScale, 60 * heightScale, (cardDiameter * INNER_COMPASS_CARD_RATIO) / 2, greyPaint);
+		
+		// draw the compass card
+		canvas.rotate(compassCurrentBearing * -1, 50 * widthScale, 60 * heightScale);
+		int cardX = (int)Math.floor(50 * widthScale - (cardDiameter / 2));
+		int cardY = (int)Math.floor(60 * heightScale - (cardDiameter / 2));
+		Rect cardRect = new Rect(cardX, cardY, cardX + cardDiameter, cardY + cardDiameter);
+		canvas.drawBitmap(card, null, cardRect, imagePaint);
+		/*Rect needle = new Rect(230, 200, 250, 600);
 		canvas.drawRect(needle, greyPaint);
 		Rect point = new Rect(230, 200, 250, 220);
-		canvas.drawRect(point, redPaint);
+		canvas.drawRect(point, redPaint);*/
 		canvas.restore();
+		
+		// draw the bezel
+		darkGreyPaint.setStyle(Paint.Style.STROKE);
+		darkGreyPaint.setStrokeWidth(6f); 
+		canvas.drawCircle(50 * widthScale, 60 * heightScale, cardDiameter / 2 + 2f, darkGreyPaint);
+		canvas.drawLine(50 * widthScale, cardY, 50 * widthScale, cardY + ((1 - INNER_COMPASS_CARD_RATIO) * cardDiameter / 2), darkGreyPaint);
+		darkGreyPaint.setStyle(Paint.Style.FILL);
 		
 		// draw the accuracy meter
 		redPaint.setTextSize(25f);
@@ -179,7 +235,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		
 		// draw the fps
 		greyPaint.setTextSize(15f);
-		canvas.drawText(Float.toString(currentFps) + " FPS", 5, canvas.getHeight() - 10, greyPaint);
+		canvas.drawText(Float.toString(currentFps) + " FPS", 1 * widthScale, 98 * heightScale, greyPaint);
 	}
 	
 	public synchronized void useTrueNorth(boolean useTrueNorth) {
@@ -192,11 +248,17 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	
 	public void stopAnimation() {
 		isRunning = false; // stop the animation loop
+		float avgFps = (long)(totalFrames * 1000l) / (long)totalTime;
+		Log.v("compass", "total frames:"+totalFrames+" total time:"+totalTime+" avg. fps:"+Float.toString(avgFps));
 	}
 	
 	public void startAnimation() {
 		// set the compass position to prevent spinning
 		compassCurrentBearing = compass.getPositiveBearing(useTrueNorth());
+		
+		// set variables for working out avg fps
+		totalFrames = 0;
+		totalTime = 0;
 		
 		isRunning = true; // flag the loop as running
 		// create and start the thread
@@ -216,7 +278,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 			update(1); // TODO set up a delta system
 			triggerDraw(); // draw the update
 			
-			// work out how long to sleep for
+	 		// work out how long to sleep for
 			long finishTime = System.currentTimeMillis();
 			long requiredSleepTime = maxSleepTime - (finishTime - startTime);
 			// check if the sleep time was too low
@@ -224,6 +286,8 @@ public class CompassSurface extends SurfaceView implements Runnable {
 				requiredSleepTime = MINIMUM_SLEEP_TIME;
 			}
 			currentFps = 1000 / (requiredSleepTime + (finishTime - startTime));
+			totalFrames ++;
+			totalTime += (requiredSleepTime + (finishTime - startTime));
 			// try to sleep for this time
 			try {
 				Thread.sleep(requiredSleepTime);
@@ -241,5 +305,8 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		// initialize the number formatters
 		bearingFormat = new DecimalFormat("000");
 		declenationFormat = new DecimalFormat("00.0");
+		
+		// initialize images
+		initDrawing();
 	}
 }
