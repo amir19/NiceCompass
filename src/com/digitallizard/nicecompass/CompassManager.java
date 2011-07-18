@@ -214,6 +214,7 @@ public class CompassManager implements SensorEventListener {
 		accelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		sensorsRegistered = false;
 		sensorHasNewData = false;
+		status = STATUS_INACTIVE;
 		
 		// define a listener that listens for location updates
 		locationListener = new LocationListener() {

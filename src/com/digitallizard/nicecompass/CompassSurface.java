@@ -14,11 +14,14 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.Window;
 
 public class CompassSurface extends SurfaceView implements Runnable {
 	/** constants **/
+	private static final int STATUS_NO_EVENT = -1;
+	
 	private static final int TARGET_FPS = 30;
 	private static final int MINIMUM_SLEEP_TIME = 10;
 	
@@ -26,6 +29,9 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private static final int REQUIRED_BEARING_REPEAT = 40; 
 	
 	private static final float INNER_COMPASS_CARD_RATIO = 7f / 11f;
+	private static final float COMPASS_CENTER_X = 50f;
+	private static final float COMPASS_CENTER_Y = 60f;
+	private static final float CARD_DIAMETER = 90f;
 	/*private static final int GREATER_DIVISION_INTERVAL = 90;
 	private static final int DIVISION_TEXT_INTERVAL = 15;
 	private static final int DIVISION_INCREMENT = 5; // must be factor of 360*/
@@ -45,15 +51,19 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	// images
 	private Bitmap background;
 	private Bitmap card;
+	private Bitmap interferenceImage;
 	
 	// paint
-	Paint imagePaint;
-	Paint blackPaint;
-	Paint greyPaint;
-	Paint darkGreyPaint;
-	Paint redPaint;
+	private Paint imagePaint;
+	private Paint blackPaint;
+	private Paint greyPaint;
+	private Paint darkGreyPaint;
+	private Paint redPaint;
 	
-	private String statusText;
+	private float cachedWidthScale;
+	private float cachedHeightScale;
+	
+	private int displayedStatus;
 	
 	private float bearing;
 	private int repeatedBearingCount;
@@ -69,9 +79,31 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private long totalTime;
 	
 	
+	float getWidthScale() {
+		// check if the scale needs to be initialized
+		if(cachedWidthScale == 0f) {
+			cachedWidthScale = this.getWidth() / 100f;
+		}
+		return cachedWidthScale;
+	}
+	
+	float getHeightScale() {
+		// check if the scale needs to be initialized
+		if(cachedHeightScale == 0f) {
+			cachedHeightScale = this.getHeight() / 100f;
+		}
+		return cachedHeightScale;
+	}
+	
+	void innerCardTouched() {
+		// dismiss any statuses
+		displayedStatus = STATUS_NO_EVENT;
+	}
+	
 	void initDrawing() {
 		//background = BitmapFactory.decodeResource(getResources(), R.drawable.background);
 		card = BitmapFactory.decodeResource(getResources(), R.drawable.card);
+		interferenceImage = BitmapFactory.decodeResource(getResources(), R.drawable.interference);
 		
 		imagePaint = new Paint();
 		imagePaint.setDither(true);
@@ -97,15 +129,12 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	
 	void updateAccuracy() {
 		int status = compass.getStatus();
-		switch(status){
-		case CompassManager.STATUS_INTERFERENCE:
-			statusText = "INTERFERENCE DETECTED!";
-			break;
-		case CompassManager.STATUS_INACTIVE:
-			statusText = "COMPASS INACTIVE";
-			break;
-			default:
-				statusText = "";
+		// check in case the status is already set to an event
+		if(displayedStatus == STATUS_NO_EVENT) {
+			// only display statuses we can handle
+			if(status == CompassManager.STATUS_INTERFERENCE) {
+				displayedStatus = status;
+			}
 		}
 	}
 	
@@ -191,10 +220,10 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	public void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
 		
-		// work out scale factors for percent
-		float widthScale = canvas.getWidth() / 100f;
-		float heightScale = canvas.getHeight() / 100f;
-
+		// update the scales
+		float widthScale = getWidthScale();
+		float heightScale = getHeightScale();
+		
 		//canvas.drawColor(Color.BLACK); // blank the screen
 		canvas.drawARGB(255, 24, 24, 24);
 		//canvas.drawBitmap(background, null, new Rect(0, 0, canvas.getWidth(), canvas.getHeight()), imagePaint);
@@ -207,35 +236,51 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		canvas.drawText(declenationText, (50 * widthScale) - getTextCenterOffset(declenationText, greyPaint), 20 * heightScale, greyPaint);
 		
 		// draw the inside of the compass card
-		int cardDiameter = (int)Math.floor(90 * widthScale);
+		int cardDiameter = (int)Math.floor(CARD_DIAMETER * widthScale);
 		canvas.drawCircle(50 * widthScale, 60 * heightScale, (cardDiameter * INNER_COMPASS_CARD_RATIO) / 2, greyPaint);
+		Rect centerRect = new Rect((int)Math.floor(COMPASS_CENTER_X * widthScale - ((cardDiameter * INNER_COMPASS_CARD_RATIO) / 2)), 
+				(int)Math.floor(COMPASS_CENTER_Y * heightScale - ((cardDiameter * INNER_COMPASS_CARD_RATIO) / 2)), 
+				(int)Math.floor(COMPASS_CENTER_X * widthScale + ((cardDiameter * INNER_COMPASS_CARD_RATIO) / 2)), 
+				(int)Math.floor(COMPASS_CENTER_Y * heightScale + ((cardDiameter * INNER_COMPASS_CARD_RATIO) / 2)));
+		// draw the right status
+		if(displayedStatus == CompassManager.STATUS_INTERFERENCE) {
+			canvas.drawBitmap(interferenceImage, null, centerRect, imagePaint);
+		}
 		
 		// draw the compass card
-		canvas.rotate(compassCurrentBearing * -1, 50 * widthScale, 60 * heightScale);
-		int cardX = (int)Math.floor(50 * widthScale - (cardDiameter / 2));
-		int cardY = (int)Math.floor(60 * heightScale - (cardDiameter / 2));
+		canvas.rotate(compassCurrentBearing * -1, COMPASS_CENTER_X * widthScale, COMPASS_CENTER_Y * heightScale);
+		int cardX = (int)Math.floor(COMPASS_CENTER_X * widthScale - (cardDiameter / 2));
+		int cardY = (int)Math.floor(COMPASS_CENTER_Y * heightScale - (cardDiameter / 2));
 		Rect cardRect = new Rect(cardX, cardY, cardX + cardDiameter, cardY + cardDiameter);
 		canvas.drawBitmap(card, null, cardRect, imagePaint);
-		/*Rect needle = new Rect(230, 200, 250, 600);
-		canvas.drawRect(needle, greyPaint);
-		Rect point = new Rect(230, 200, 250, 220);
-		canvas.drawRect(point, redPaint);*/
 		canvas.restore();
 		
 		// draw the bezel
 		darkGreyPaint.setStyle(Paint.Style.STROKE);
 		darkGreyPaint.setStrokeWidth(6f); 
-		canvas.drawCircle(50 * widthScale, 60 * heightScale, cardDiameter / 2 + 2f, darkGreyPaint);
-		canvas.drawLine(50 * widthScale, cardY, 50 * widthScale, cardY + ((1 - INNER_COMPASS_CARD_RATIO) * cardDiameter / 2), darkGreyPaint);
+		canvas.drawCircle(COMPASS_CENTER_X * widthScale, COMPASS_CENTER_Y * heightScale, cardDiameter / 2 + 2f, darkGreyPaint);
+		canvas.drawLine(COMPASS_CENTER_X * widthScale, cardY, COMPASS_CENTER_X * widthScale, cardY + ((1 - INNER_COMPASS_CARD_RATIO) * cardDiameter / 2), darkGreyPaint);
 		darkGreyPaint.setStyle(Paint.Style.FILL);
-		
-		// draw the accuracy meter
-		redPaint.setTextSize(25f);
-		canvas.drawText(statusText, (canvas.getWidth() / 2) - getTextCenterOffset(statusText, redPaint), canvas.getHeight() - 30, redPaint);
 		
 		// draw the fps
 		greyPaint.setTextSize(15f);
 		canvas.drawText(Float.toString(currentFps) + " FPS", 1 * widthScale, 98 * heightScale, greyPaint);
+	}
+	
+	public boolean onTouchEvent(MotionEvent event) {
+		if(event.getAction() == MotionEvent.ACTION_DOWN) {
+			// check if the user touched inside the card centre
+			float x = event.getX();
+			float y = event.getY();
+			float compassX = COMPASS_CENTER_X * getWidthScale();
+			float compassY = COMPASS_CENTER_Y * getHeightScale();
+			float distance = (float)Math.sqrt(Math.pow(x - compassX, 2) + Math.pow(y - compassY, 2));
+			if(distance < (CARD_DIAMETER * INNER_COMPASS_CARD_RATIO * getWidthScale())) {
+				innerCardTouched();
+			}
+			return true; // we used the touch
+		}
+		return false; // we did not use the touch
 	}
 	
 	public synchronized void useTrueNorth(boolean useTrueNorth) {
@@ -255,6 +300,9 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	public void startAnimation() {
 		// set the compass position to prevent spinning
 		compassCurrentBearing = compass.getPositiveBearing(useTrueNorth());
+		
+		// reset the status
+		displayedStatus = STATUS_NO_EVENT;
 		
 		// set variables for working out avg fps
 		totalFrames = 0;
