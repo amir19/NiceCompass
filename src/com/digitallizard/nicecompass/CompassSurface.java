@@ -1,7 +1,6 @@
 package com.digitallizard.nicecompass;
 
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -9,14 +8,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
-import android.view.Window;
 
 public class CompassSurface extends SurfaceView implements Runnable {
 	/** constants **/
@@ -59,6 +54,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private Paint greyPaint;
 	private Paint darkGreyPaint;
 	private Paint redPaint;
+	private Paint bluePaint;
 	
 	private float cachedWidthScale;
 	private float cachedHeightScale;
@@ -75,9 +71,27 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private float compassCurrentBearing;
 	private float compassSpeed;
 	
+	private boolean bearingLocked;
+	private float currentLockedBearing;
+	
 	private long totalFrames;
 	private long totalTime;
 	
+	
+	synchronized float getLockedBearingRotation() {
+		if(bearingLocked){
+			return currentLockedBearing;
+		}
+		else {
+			// return directly up the screen
+			return compassCurrentBearing;
+		}
+	}
+	
+	synchronized void toggleBearingLock() {
+		bearingLocked = !bearingLocked;
+		currentLockedBearing = compassCurrentBearing;
+	}
 	
 	float getWidthScale() {
 		// check if the scale needs to be initialized
@@ -96,6 +110,10 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	}
 	
 	void innerCardTouched() {
+		// toggle the locked bearing if no status is being displayed
+		if(displayedStatus == STATUS_NO_EVENT) {
+			toggleBearingLock();
+		}
 		// dismiss any statuses
 		displayedStatus = STATUS_NO_EVENT;
 	}
@@ -115,6 +133,8 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		darkGreyPaint.setARGB(255, 112, 112, 112);
 		redPaint = new Paint();
 		redPaint.setColor(Color.RED);
+		bluePaint = new Paint();
+		bluePaint.setColor(Color.BLUE);
 	}
 	
 	float getTextCenterOffset(String text, Paint paint) {
@@ -253,6 +273,13 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		int cardY = (int)Math.floor(COMPASS_CENTER_Y * heightScale - (cardDiameter / 2));
 		Rect cardRect = new Rect(cardX, cardY, cardX + cardDiameter, cardY + cardDiameter);
 		canvas.drawBitmap(card, null, cardRect, imagePaint);
+		//canvas.restore();
+		
+		// draw the locked bearing
+		canvas.rotate(getLockedBearingRotation(), COMPASS_CENTER_X * widthScale, COMPASS_CENTER_Y * heightScale);
+		bluePaint.setStyle(Paint.Style.STROKE);
+		bluePaint.setStrokeWidth(3f);
+		canvas.drawLine(COMPASS_CENTER_X * widthScale, cardY, COMPASS_CENTER_X * widthScale, cardY + ((1 - INNER_COMPASS_CARD_RATIO) * cardDiameter / 2), bluePaint);
 		canvas.restore();
 		
 		// draw the bezel
@@ -261,7 +288,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		canvas.drawCircle(COMPASS_CENTER_X * widthScale, COMPASS_CENTER_Y * heightScale, cardDiameter / 2 + 2f, darkGreyPaint);
 		canvas.drawLine(COMPASS_CENTER_X * widthScale, cardY, COMPASS_CENTER_X * widthScale, cardY + ((1 - INNER_COMPASS_CARD_RATIO) * cardDiameter / 2), darkGreyPaint);
 		darkGreyPaint.setStyle(Paint.Style.FILL);
-		
+				
 		// draw the fps
 		greyPaint.setTextSize(15f);
 		canvas.drawText(Float.toString(currentFps) + " FPS", 1 * widthScale, 98 * heightScale, greyPaint);
