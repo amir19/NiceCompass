@@ -21,20 +21,19 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private static final int MINIMUM_SLEEP_TIME = 10;
 	
 	private static final int REQUIRED_BEARING_CHANGE = 5;
-	private static final int REQUIRED_BEARING_REPEAT = 40; 
+	private static final int REQUIRED_BEARING_REPEAT = 40;
+	private static final float BEARING_X = 50f;
+	private static final float BEARING_Y = 15f;
+	private static final float DECLENATION_VARIATION_OFFSET = 5f;
+	private static final float BEARING_TOUCH_RADIUS = 20f;
 	
 	private static final float INNER_COMPASS_CARD_RATIO = 7f / 11f;
 	private static final float COMPASS_CENTER_X = 50f;
 	private static final float COMPASS_CENTER_Y = 60f;
 	private static final float CARD_DIAMETER = 90f;
-	/*private static final int GREATER_DIVISION_INTERVAL = 90;
-	private static final int DIVISION_TEXT_INTERVAL = 15;
-	private static final int DIVISION_INCREMENT = 5; // must be factor of 360*/
 	
 	private static final float COMPASS_ACCEL_RATE = 0.9f;
 	private static final float COMPASS_SPEED_MODIFIER = 0.26f;
-	//private static final float COMPASS_LOCKON_DISTANCE = 1f;
-	//private static final float COMPASS_MINIMUM_SPEED = 1f;
 	
 	/** variables **/
 	private CompassManager compass;
@@ -113,6 +112,11 @@ public class CompassSurface extends SurfaceView implements Runnable {
 			cachedHeightScale = this.getHeight() / 100f;
 		}
 		return cachedHeightScale;
+	}
+	
+	void bearingTouched() {
+		// toggle magnetic or true north
+		useTrueNorth(!useTrueNorth()); // woah, what a function!
 	}
 	
 	void innerCardTouched() {
@@ -220,6 +224,8 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		bearingText = bearingFormat.format(bearing);
 		bearingText += "\u00B0 "; // add the degrees symbol
 		bearingText += CardinalConverter.cardinalFromPositiveBearing(bearing); // add the cardinal information
+		// add the magnetic 
+		bearingText += " " + CardinalConverter.convertUseTrueNorth(useTrueNorth());
 		
 		declenationText = "variation: "+declenationFormat.format(compass.getDeclination())+"\u00B0";
 	}
@@ -259,9 +265,14 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		
 		// draw the bearing information
 		greyPaint.setTextSize(70f);
-		canvas.drawText(bearingText, (50 * widthScale) - getTextCenterOffset(bearingText, greyPaint), 15 * heightScale, greyPaint);
-		greyPaint.setTextSize(25f);
-		canvas.drawText(declenationText, (50 * widthScale) - getTextCenterOffset(declenationText, greyPaint), 20 * heightScale, greyPaint);
+		canvas.drawText(bearingText, (BEARING_X * widthScale) - getTextCenterOffset(bearingText, greyPaint), BEARING_Y * heightScale, greyPaint);
+		
+		// only draw the declenation text in true north mode
+		if(useTrueNorth()) {
+			greyPaint.setTextSize(25f);
+			canvas.drawText(declenationText, (BEARING_X * widthScale) - getTextCenterOffset(declenationText, greyPaint), 
+					(BEARING_Y + DECLENATION_VARIATION_OFFSET) * heightScale, greyPaint);
+		}
 		
 		// draw the inside of the compass card
 		int cardDiameter = (int)Math.floor(CARD_DIAMETER * widthScale);
@@ -326,16 +337,26 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	
 	public boolean onTouchEvent(MotionEvent event) {
 		if(event.getAction() == MotionEvent.ACTION_DOWN) {
-			// check if the user touched inside the card centre
 			float x = event.getX();
 			float y = event.getY();
+			
+			// check if the user touched inside the card centre
 			float compassX = COMPASS_CENTER_X * getWidthScale();
 			float compassY = COMPASS_CENTER_Y * getHeightScale();
 			float distance = (float)Math.sqrt(Math.pow(x - compassX, 2) + Math.pow(y - compassY, 2));
-			if(distance < (CARD_DIAMETER * INNER_COMPASS_CARD_RATIO * getWidthScale())) {
+			if(distance < ((CARD_DIAMETER / 2) * INNER_COMPASS_CARD_RATIO * getWidthScale())) {
 				innerCardTouched();
+				return true; // we used the touch
 			}
-			return true; // we used the touch
+			
+			// check if the user touched the bearing
+			float bearingX = BEARING_X * getWidthScale();
+			float bearingY = BEARING_Y * getHeightScale();
+			distance = (float)Math.sqrt(Math.pow(x - bearingX, 2) + Math.pow(y - bearingY, 2));
+			if(distance < (BEARING_TOUCH_RADIUS * getWidthScale())) {
+				bearingTouched();
+				return true; // we used the touch
+			}
 		}
 		return false; // we did not use the touch
 	}
