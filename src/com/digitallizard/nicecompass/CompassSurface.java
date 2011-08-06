@@ -144,7 +144,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		bluePaint = new Paint();
 		bluePaint.setARGB(255, 0, 94, 195);
 	}
-	
+	 
 	float getTextCenterOffset(String text, Paint paint) {
 		float[] widths = new float[text.length()];
 		paint.getTextWidths(text, widths);
