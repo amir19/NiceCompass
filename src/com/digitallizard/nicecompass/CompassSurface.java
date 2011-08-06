@@ -44,9 +44,11 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private float currentFps;
 	
 	// images
-	private Bitmap background;
-	private Bitmap card;
+	private Bitmap backgroundImage;
+	private Bitmap cardImage;
 	private Bitmap interferenceImage;
+	private Bitmap openPadlockImage;
+	private Bitmap closedPadlockImage;
 	
 	// paint
 	private Paint imagePaint;
@@ -78,7 +80,11 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private long totalTime;
 	
 	
-	synchronized float getLockedBearingRotation() {
+	synchronized boolean isBearingLocked() {
+		return bearingLocked;
+	}
+	
+	synchronized float getLockedBearing() {
 		if(bearingLocked){
 			return currentLockedBearing;
 		}
@@ -120,8 +126,10 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	
 	void initDrawing() {
 		//background = BitmapFactory.decodeResource(getResources(), R.drawable.background);
-		card = BitmapFactory.decodeResource(getResources(), R.drawable.card);
+		cardImage = BitmapFactory.decodeResource(getResources(), R.drawable.card);
 		interferenceImage = BitmapFactory.decodeResource(getResources(), R.drawable.interference);
+		openPadlockImage = BitmapFactory.decodeResource(getResources(), R.drawable.padlock_open);
+		closedPadlockImage = BitmapFactory.decodeResource(getResources(), R.drawable.padlock_closed);
 		
 		imagePaint = new Paint();
 		imagePaint.setDither(true);
@@ -134,7 +142,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		redPaint = new Paint();
 		redPaint.setColor(Color.RED);
 		bluePaint = new Paint();
-		bluePaint.setColor(Color.BLUE);
+		bluePaint.setARGB(255, 0, 94, 195);
 	}
 	
 	float getTextCenterOffset(String text, Paint paint) {
@@ -257,7 +265,13 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		
 		// draw the inside of the compass card
 		int cardDiameter = (int)Math.floor(CARD_DIAMETER * widthScale);
-		canvas.drawCircle(50 * widthScale, 60 * heightScale, (cardDiameter * INNER_COMPASS_CARD_RATIO) / 2, greyPaint);
+		if(!isBearingLocked()){
+			canvas.drawCircle(50 * widthScale, 60 * heightScale, (cardDiameter * INNER_COMPASS_CARD_RATIO) / 2, greyPaint);
+		}
+		else {
+			bluePaint.setStyle(Paint.Style.FILL_AND_STROKE);
+			canvas.drawCircle(50 * widthScale, 60 * heightScale, (cardDiameter * INNER_COMPASS_CARD_RATIO) / 2, bluePaint);
+		}
 		Rect centerRect = new Rect((int)Math.floor(COMPASS_CENTER_X * widthScale - ((cardDiameter * INNER_COMPASS_CARD_RATIO) / 2)), 
 				(int)Math.floor(COMPASS_CENTER_Y * heightScale - ((cardDiameter * INNER_COMPASS_CARD_RATIO) / 2)), 
 				(int)Math.floor(COMPASS_CENTER_X * widthScale + ((cardDiameter * INNER_COMPASS_CARD_RATIO) / 2)), 
@@ -267,16 +281,32 @@ public class CompassSurface extends SurfaceView implements Runnable {
 			canvas.drawBitmap(interferenceImage, null, centerRect, imagePaint);
 		}
 		
+		// if not status draw the bearing lock indicator
+		if(displayedStatus == STATUS_NO_EVENT) {
+			if(!isBearingLocked()) {
+				canvas.drawBitmap(openPadlockImage, null, centerRect, imagePaint);
+			}
+			if(isBearingLocked()) {
+				canvas.drawBitmap(closedPadlockImage, null, centerRect, imagePaint);
+				greyPaint.setTextSize(30f);
+				String lockedBearingText = bearingFormat.format(getLockedBearing());
+				/*canvas.drawText(lockedBearingText, 50 * widthScale - getTextCenterOffset(lockedBearingText, greyPaint), 
+						(10 * CARD_DIAMETER + COMPASS_CENTER_Y) * heightScale, greyPaint);*/
+				canvas.drawText(lockedBearingText + "\u00B0", 50 * widthScale - getTextCenterOffset(lockedBearingText, greyPaint), 
+						(float)((0.17 * CARD_DIAMETER + COMPASS_CENTER_Y) * heightScale), greyPaint);
+			}
+		}
+		
 		// draw the compass card
 		canvas.rotate(compassCurrentBearing * -1, COMPASS_CENTER_X * widthScale, COMPASS_CENTER_Y * heightScale);
 		int cardX = (int)Math.floor(COMPASS_CENTER_X * widthScale - (cardDiameter / 2));
 		int cardY = (int)Math.floor(COMPASS_CENTER_Y * heightScale - (cardDiameter / 2));
 		Rect cardRect = new Rect(cardX, cardY, cardX + cardDiameter, cardY + cardDiameter);
-		canvas.drawBitmap(card, null, cardRect, imagePaint);
+		canvas.drawBitmap(cardImage, null, cardRect, imagePaint);
 		//canvas.restore();
 		
 		// draw the locked bearing
-		canvas.rotate(getLockedBearingRotation(), COMPASS_CENTER_X * widthScale, COMPASS_CENTER_Y * heightScale);
+		canvas.rotate(getLockedBearing(), COMPASS_CENTER_X * widthScale, COMPASS_CENTER_Y * heightScale);
 		bluePaint.setStyle(Paint.Style.STROKE);
 		bluePaint.setStrokeWidth(3f);
 		canvas.drawLine(COMPASS_CENTER_X * widthScale, cardY, COMPASS_CENTER_X * widthScale, cardY + ((1 - INNER_COMPASS_CARD_RATIO) * cardDiameter / 2), bluePaint);
