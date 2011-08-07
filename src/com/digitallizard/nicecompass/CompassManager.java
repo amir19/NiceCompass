@@ -6,8 +6,6 @@
  ******************************************************************************/
 package com.digitallizard.nicecompass;
 
-import java.util.Arrays;
-
 import android.content.Context;
 import android.hardware.GeomagneticField;
 import android.hardware.Sensor;
@@ -18,7 +16,6 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.util.Log;
 
 public class CompassManager implements SensorEventListener {
 	/** constants **/

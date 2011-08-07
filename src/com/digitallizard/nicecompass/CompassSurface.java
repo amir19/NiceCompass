@@ -2,13 +2,17 @@ package com.digitallizard.nicecompass;
 
 import java.text.DecimalFormat;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.GradientDrawable.Orientation;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
@@ -36,6 +40,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private static final float COMPASS_SPEED_MODIFIER = 0.26f;
 	
 	/** variables **/
+	private Context context;
 	private CompassManager compass;
 	private Thread animationThread;
 	private volatile boolean isRunning;
@@ -43,7 +48,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private float currentFps;
 	
 	// images
-	private Bitmap backgroundImage;
+	GradientDrawable backgroundGradient;
 	private Bitmap cardImage;
 	private Bitmap interferenceImage;
 	private Bitmap openPadlockImage;
@@ -128,8 +133,23 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		displayedStatus = STATUS_NO_EVENT;
 	}
 	
+	GradientDrawable getBackgroundGradientDrawable() {
+		// check if the background is initialised
+		if(backgroundGradient == null){
+			int[] colors = {0xff313131, 0xff3f403f, 0xff313131};
+			//int[] colors = {0xff000000, 0xffffffff};
+			backgroundGradient = new GradientDrawable(Orientation.TOP_BOTTOM, colors);
+			backgroundGradient.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+			backgroundGradient.setGradientRadius(10 * getWidthScale());
+			backgroundGradient.setDither(true);
+			backgroundGradient.setGradientCenter(50 * getWidthScale(), 50 * getHeightScale());
+			Rect bounds = new Rect(0, 0, (int)Math.floor(100 * getWidthScale()), (int)Math.floor(100 * getHeightScale()));
+			backgroundGradient.setBounds(bounds);
+		}
+		return backgroundGradient;
+	}
+	
 	void initDrawing() {
-		//background = BitmapFactory.decodeResource(getResources(), R.drawable.background);
 		cardImage = BitmapFactory.decodeResource(getResources(), R.drawable.card);
 		interferenceImage = BitmapFactory.decodeResource(getResources(), R.drawable.interference);
 		openPadlockImage = BitmapFactory.decodeResource(getResources(), R.drawable.padlock_open);
@@ -259,9 +279,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		float heightScale = getHeightScale();
 		
 		//canvas.drawColor(Color.BLACK); // blank the screen
-		canvas.drawARGB(255, 24, 24, 24);
-		//canvas.drawBitmap(background, null, new Rect(0, 0, canvas.getWidth(), canvas.getHeight()), imagePaint);
-		//canvas.drawBitmap(background, 0, 0, imagePaint);
+		getBackgroundGradientDrawable().draw(canvas);
 		
 		// draw the bearing information
 		greyPaint.setTextSize(70f);
@@ -301,8 +319,6 @@ public class CompassSurface extends SurfaceView implements Runnable {
 				canvas.drawBitmap(closedPadlockImage, null, centerRect, imagePaint);
 				greyPaint.setTextSize(30f);
 				String lockedBearingText = bearingFormat.format(getLockedBearing());
-				/*canvas.drawText(lockedBearingText, 50 * widthScale - getTextCenterOffset(lockedBearingText, greyPaint), 
-						(10 * CARD_DIAMETER + COMPASS_CENTER_Y) * heightScale, greyPaint);*/
 				canvas.drawText(lockedBearingText + "\u00B0", 50 * widthScale - getTextCenterOffset(lockedBearingText, greyPaint), 
 						(float)((0.17 * CARD_DIAMETER + COMPASS_CENTER_Y) * heightScale), greyPaint);
 			}
@@ -425,6 +441,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	
 	public CompassSurface(Context context, CompassManager compass, boolean useTrueNorth) {
 		super(context);
+		this.context = context;
 		this.compass = compass;
 		useTrueNorth(useTrueNorth);
 		

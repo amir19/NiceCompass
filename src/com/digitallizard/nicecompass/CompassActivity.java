@@ -9,10 +9,7 @@ package com.digitallizard.nicecompass;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.graphics.PixelFormat;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Window;
 import android.widget.LinearLayout;
 
 public class CompassActivity extends Activity {
@@ -63,6 +60,9 @@ public class CompassActivity extends Activity {
         compass = new CompassManager(this);
         surface = new CompassSurface(this, compass, useTrueNorth);
         surfaceContainer = (LinearLayout)findViewById(R.id.compassSurfaceContainer);
+        
+        // prevent gradient banding
+        surface.getHolder().setFormat(android.graphics.PixelFormat.TRANSPARENT);
         
         // add the compass
         surfaceContainer.addView(surface);
