@@ -191,7 +191,8 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	}
 	
 	void updateCompass() {
-		float newBearing = compass.getPositiveBearing(useTrueNorth());
+		//float newBearing = compass.getPositiveBearing(useTrueNorth());
+		float newBearing = bearing;
 		// adjust the new bearing to prevent problems involving 360 -- 0
 		if(compassCurrentBearing < 90 && newBearing > 270){
 			newBearing -= 360;
