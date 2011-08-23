@@ -215,22 +215,18 @@ public class CompassManager implements SensorEventListener {
 		
 		// define a listener that listens for location updates
 		locationListener = new LocationListener() {
-			@Override
 			public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
 				// TODO Auto-generated method stub
 			}
 			
-			@Override
 			public void onProviderEnabled(String arg0) {
 				// TODO Auto-generated method stub
 			}
 			
-			@Override
 			public void onProviderDisabled(String arg0) {
 				// TODO Auto-generated method stub
 			}
 			
-			@Override
 			public void onLocationChanged(Location location) {
 				// store the new location
 				locationCache = location;
