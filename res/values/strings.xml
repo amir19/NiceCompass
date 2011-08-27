@@ -6,8 +6,7 @@
   All rights reserved.
 -->
 <resources>
-    <string name="hello">Hello World, CompassActivity!</string>
-    <string name="app_name">NiceCompass</string>
+    <string name="app_name">Nice Compass</string>
     <string name="magnetic_north">Magnetic North</string>
     <string name="true_north">True North</string>
     <string name="settings_category_general">General</string>
