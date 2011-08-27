@@ -81,17 +81,23 @@ public class GPSManager {
 			}
 			
 			public void onProviderEnabled(String provider) {
-				// if the status currently says that the gps is disabled, change it to stopped
-				if(getStatus() == STATUS_GPS_DISABLED) {
-					updateStatus(STATUS_GPS_STOPPED);
+				// only listen to stuff about gps
+				if(provider == LocationManager.GPS_PROVIDER){
+					// if the status currently says that the gps is disabled, change it to stopped
+					if(getStatus() == STATUS_GPS_DISABLED) {
+						updateStatus(STATUS_GPS_STOPPED);
+					}
 				}
 			}
 			
 			public void onProviderDisabled(String provider) {
-				// stop the gps, probably unneeded
-				stopGPS();
-				// update the status
-				updateStatus(STATUS_GPS_DISABLED);
+				// only listen to stuff about gps
+				if(provider == LocationManager.GPS_PROVIDER){
+					// stop the gps, probably unneeded
+					stopGPS();
+					// update the status
+					updateStatus(STATUS_GPS_DISABLED);
+				}
 			}
 			
 			public void onLocationChanged(Location location) {
