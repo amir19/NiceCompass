@@ -41,7 +41,41 @@ public class CompassManager implements SensorEventListener {
 	private Location locationCache;
 	private int status;
 	
-	void interferenceTest(float[] values) {
+	
+	private synchronized float[] getAccelValues() {
+		return accelValues;
+	}
+
+	private synchronized void setAccelValues(float[] accelValues) {
+		this.accelValues = accelValues;
+	}
+
+	private synchronized Location getLocation() {
+		return locationCache;
+	}
+
+	private synchronized void updateLocation(Location locationCache) {
+		this.locationCache = locationCache;
+	}
+
+	private synchronized float[] getMagValues() {
+		return magValues;
+	}
+	
+	private synchronized void setMagValues(float[] values) {
+		magValues = values;
+	}
+	
+	private synchronized boolean sensorHasNewData() {
+		return sensorHasNewData;
+	}
+	
+	private synchronized void setSensorHasNewData(boolean newData) {
+		sensorHasNewData = newData;
+	}
+	
+	
+	private void interferenceTest(float[] values) {
 		// get the expected values
 		float threshold = getExpectedFieldStrength() * MAGNETIC_INTERFERENCE_THRESHOLD_MODIFIER;
 		float totalStrength = 1f;
@@ -57,9 +91,9 @@ public class CompassManager implements SensorEventListener {
 		}
 	}
 	
-	float getExpectedFieldStrength(){
+	private float getExpectedFieldStrength(){
 		// a geo field is required for accurate data
-		if(geoField != null){
+		if(getGeoField() != null){
 			return geoField.getFieldStrength();
 		} else {
 			// provide a field strength over average
@@ -67,7 +101,11 @@ public class CompassManager implements SensorEventListener {
 		}
 	}
 	
-	void updateGeoField() {
+	private synchronized GeomagneticField getGeoField() {
+		return geoField;
+	}
+	
+	private synchronized void updateGeoField() {
 		Location location = getLocation();
 		// we can do nothing without location
 		if(location != null) {
@@ -80,25 +118,29 @@ public class CompassManager implements SensorEventListener {
 		}
 	}
 	
-	float convertToTrueNorth(float bearing){
+	private float convertToTrueNorth(float bearing){
 		return bearing + getDeclination();
 	}
 	
-	float[] getOrientationData() {
+	private synchronized void setOrientationData(float[] orientationDataCache) {
+		this.orientationDataCache = orientationDataCache;
+	}
+	
+	private synchronized float[] getOrientationData() {
 		// if there is no new data, bail here
-		if(!sensorHasNewData || magValues == null || accelValues == null){
+		if(!sensorHasNewData() || getMagValues() == null || getAccelValues() == null){
 			return orientationDataCache;
 		}
 		
 		// compute the orientation data
 		float[] R = new float[16];
         float[] I = new float[16];
-        SensorManager.getRotationMatrix(R, I, accelValues, magValues);
-        orientationDataCache = new float[3];
+        SensorManager.getRotationMatrix(R, I, getAccelValues(), getMagValues());
+        setOrientationData(new float[3]);
         SensorManager.getOrientation(R, orientationDataCache);
 		
 		// flag the data as computed
-		sensorHasNewData = false;
+        setSensorHasNewData(false);
 		
 		// return the new data
 		return orientationDataCache;
@@ -115,8 +157,8 @@ public class CompassManager implements SensorEventListener {
 	
 	public float getDeclination() {
 		// if there is no geomagnetic field, just use the normal bearing
-		if(geoField != null) {
-			return geoField.getDeclination(); // convert magnetic north into true north
+		if(getGeoField() != null) {
+			return getGeoField().getDeclination(); // convert magnetic north into true north
 		}
 		else {
 			return 0f; // set the declination to 0
@@ -157,17 +199,13 @@ public class CompassManager implements SensorEventListener {
 		return bearing;
 	}
 	
-	public Location getLocation() {
-		return locationCache;
-	}
-	
 	public void unregisterSensors() {
 		if(sensorsRegistered){
 			// unregister our sensor listeners
 			locationManager.removeUpdates(locationListener);
 			sensorManager.unregisterListener(this, magSensor);
 			sensorManager.unregisterListener(this, accelSensor);
-			sensorsRegistered = false;
+			setSensorHasNewData(false);
 			status = STATUS_INACTIVE;
 		}
 	}
@@ -178,7 +216,7 @@ public class CompassManager implements SensorEventListener {
 			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_UPDATE_MIN_TIME, LOCATION_UPDATE_MIN_DISTANCE, locationListener);
 			sensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_UI);
 			sensorManager.registerListener(this, accelSensor, SensorManager.SENSOR_DELAY_UI);
-			sensorsRegistered = true;
+			setSensorHasNewData(true);
 		}
 	}
 	
@@ -186,14 +224,14 @@ public class CompassManager implements SensorEventListener {
 		// save the data from the sensor
 		switch(event.sensor.getType()){
 		case Sensor.TYPE_MAGNETIC_FIELD:
-			magValues = event.values.clone();
+			setMagValues(event.values.clone());
 			// check for interference
-			interferenceTest(magValues);
-			sensorHasNewData = true;
+			interferenceTest(getMagValues());
+			setSensorHasNewData(true);
 			break;
 		case Sensor.TYPE_ACCELEROMETER:
-			accelValues = event.values.clone();
-			sensorHasNewData = true;
+			setAccelValues(event.values.clone());
+			setSensorHasNewData(true);
 			break;
 		}
 	}
@@ -208,7 +246,7 @@ public class CompassManager implements SensorEventListener {
 		magSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 		accelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		sensorsRegistered = false;
-		sensorHasNewData = false;
+		setSensorHasNewData(false);
 		status = STATUS_INACTIVE;
 		
 		// define a listener that listens for location updates
@@ -227,7 +265,7 @@ public class CompassManager implements SensorEventListener {
 			
 			public void onLocationChanged(Location location) {
 				// store the new location
-				locationCache = location;
+				updateLocation(location);
 				updateGeoField(); // update the geomagnetic field
 			}
 		};
