@@ -170,7 +170,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		redPaint = new Paint();
 		redPaint.setColor(Color.RED);
 		bluePaint = new Paint();
-		bluePaint.setARGB(255, 0, 94, 195);
+		bluePaint.setARGB(255, 0, 94, 155);
 	}
 	 
 	float getTextCenterOffset(String text, Paint paint) {
