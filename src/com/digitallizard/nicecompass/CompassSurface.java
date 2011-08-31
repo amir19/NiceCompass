@@ -139,8 +139,9 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	GradientDrawable getBackgroundGradientDrawable() {
 		// check if the background is initialised
 		if(backgroundGradient == null){
-			int[] colors = {0xff313131, 0xff3f403f, 0xff313131};
-			//int[] colors = {0xff000000, 0xffffffff};
+			int[] colors = {0xff3f403f, 0xff666666, 0xff3f403f};
+			//int[] colors = {0xff610606, 0xff666666, 0xff610606};
+			//int[] colors = {0xff610606, 0xffffffff};
 			backgroundGradient = new GradientDrawable(Orientation.TOP_BOTTOM, colors);
 			backgroundGradient.setGradientType(GradientDrawable.LINEAR_GRADIENT);
 			backgroundGradient.setGradientRadius(10 * getWidthScale());
