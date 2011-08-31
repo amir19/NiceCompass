@@ -22,7 +22,6 @@ public class GPSManager {
 	private static long MIN_UPDATE_TIME_MILLIS = 10l * 1000l; // 10 seconds
 	private static float MIN_UPDATE_DISTANCE_METERS = 1f; // 1 meter
 	
-	private Context context;
 	private LocationManager locationManager;
 	private LocationListener locationListener;
 	private Location locationCache;
@@ -78,7 +77,6 @@ public class GPSManager {
 	
 	public GPSManager(Context context) {
 		// initialize variables
-		this.context = context;
 		locationManager = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
 		// define a listener that listens for location updates
 		locationListener = new LocationListener() {

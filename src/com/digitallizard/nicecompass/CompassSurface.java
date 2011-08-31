@@ -44,7 +44,6 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private static final float COMPASS_SPEED_MODIFIER = 0.26f;
 	
 	/** variables **/
-	private Context context;
 	private CompassManager compass;
 	private Thread animationThread;
 	private volatile boolean isRunning;
@@ -446,7 +445,6 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	
 	public CompassSurface(Context context, CompassManager compass, boolean useTrueNorth) {
 		super(context);
-		this.context = context;
 		this.compass = compass;
 		useTrueNorth(useTrueNorth);
 		

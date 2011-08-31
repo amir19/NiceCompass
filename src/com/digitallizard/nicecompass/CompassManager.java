@@ -27,7 +27,6 @@ public class CompassManager implements SensorEventListener {
 	private static final float MAGNETIC_INTERFERENCE_THRESHOLD_MODIFIER = 1.05f;
 	
 	/** variables **/
-	private Context context;
 	private final LocationManager locationManager;
 	private final LocationListener locationListener;
 	private final SensorManager sensorManager;
@@ -204,7 +203,6 @@ public class CompassManager implements SensorEventListener {
 	
 	public CompassManager(Context context) {
 		// initialize variables
-		this.context = context;
 		locationManager = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
 		sensorManager = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
 		magSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
