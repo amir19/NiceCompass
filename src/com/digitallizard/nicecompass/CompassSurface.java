@@ -393,7 +393,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	public void stopAnimation() {
 		isRunning = false; // stop the animation loop
 		float avgFps = (long)(totalFrames * 1000l) / (long)totalTime;
-		Log.v("compass", "total frames:"+totalFrames+" total time:"+totalTime+" avg. fps:"+Float.toString(avgFps));
+		//Log.v("compass", "total frames:"+totalFrames+" total time:"+totalTime+" avg. fps:"+Float.toString(avgFps));
 	}
 	
 	public void startAnimation() {
