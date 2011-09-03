@@ -207,6 +207,7 @@ public class CompassManager implements SensorEventListener {
 			sensorManager.unregisterListener(this, accelSensor);
 			setSensorHasNewData(false);
 			status = STATUS_INACTIVE;
+			sensorsRegistered = false; // flag the sensors as unregistered
 		}
 	}
 	
@@ -217,6 +218,7 @@ public class CompassManager implements SensorEventListener {
 			sensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_UI);
 			sensorManager.registerListener(this, accelSensor, SensorManager.SENSOR_DELAY_UI);
 			setSensorHasNewData(true);
+			sensorsRegistered = true; // flag the sensors as registered
 		}
 	}
 	

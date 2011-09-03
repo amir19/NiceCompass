@@ -7,8 +7,8 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.digitallizard.nicecompass"
-      android:versionCode="2"
-      android:versionName="1.0.1">
+      android:versionCode="3"
+      android:versionName="1.0.2">
     <uses-sdk android:minSdkVersion="4" />
     <supports-screens android:normalScreens="true" android:resizeable="true" android:largeScreens="true" android:anyDensity="true" android:smallScreens="true"></supports-screens>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission>
