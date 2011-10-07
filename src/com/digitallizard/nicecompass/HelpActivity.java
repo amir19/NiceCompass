@@ -8,6 +8,7 @@ public class HelpActivity extends Activity {
 	private static final String HELP_HTML_URI = "file:///android_asset/help.html";
 	private WebView webView;
 	
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.help);

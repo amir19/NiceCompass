@@ -356,6 +356,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		canvas.drawText(Float.toString(currentFps) + " FPS", 1 * widthScale, 98 * heightScale, greyPaint);
 	}
 	
+	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		if(event.getAction() == MotionEvent.ACTION_DOWN) {
 			float x = event.getX();
@@ -392,7 +393,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	
 	public void stopAnimation() {
 		isRunning = false; // stop the animation loop
-		float avgFps = (long)(totalFrames * 1000l) / (long)totalTime;
+		float avgFps = (totalFrames * 1000l) / totalTime;
 		Log.v("compass", "total frames:"+totalFrames+" total time:"+totalTime+" avg. fps:"+Float.toString(avgFps));
 	}
 	
