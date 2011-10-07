@@ -3,6 +3,8 @@
 android:orientation="vertical"
 android:layout_width="fill_parent"
 android:layout_height="fill_parent">
-	<WebView>
+	<WebView android:id="@+id/helpWebView"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
 	</WebView>
 </LinearLayout>

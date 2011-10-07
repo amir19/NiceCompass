@@ -7,9 +7,15 @@
 package com.digitallizard.nicecompass;
 
 import android.app.Activity;
+import android.app.LauncherActivity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.LinearLayout;
 
 public class CompassActivity extends Activity {
@@ -20,6 +26,22 @@ public class CompassActivity extends Activity {
 	private CompassManager compass;
 	private CompassSurface surface;
 	private LinearLayout surfaceContainer;
+	
+    public boolean onOptionsItemSelected(MenuItem item){
+    	if(item.getTitle().equals(getResources().getString(R.string.menu_title_help))){
+    		Intent intent = new Intent(this, HelpActivity.class);
+    		startActivity(intent);
+    	}
+    	return true; //we have received the press so we can report true
+    }
+    
+    public boolean onCreateOptionsMenu(Menu menu){
+    	super.onCreateOptionsMenu(menu);
+    	// inflate the menu XML file
+    	MenuInflater menuInflater = new MenuInflater(this);
+    	menuInflater.inflate(R.menu.menu, menu);
+    	return true; // we have made the menu so we can return true
+    }
 
 	public void onPause() {
 		// save the current north state
