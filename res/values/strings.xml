@@ -13,4 +13,5 @@
     <string name="settings_item_north">North Reference</string>
     <string name="preference_key_north">north</string>
     <string name="settings_summary_north">True or magnetic north?</string>
+    <string name="menu_title_help">Help</string>
 </resources>

@@ -15,6 +15,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.GradientDrawable.Orientation;
 import android.util.Log;
@@ -23,6 +24,8 @@ import android.view.SurfaceView;
 
 public class CompassSurface extends SurfaceView implements Runnable {
 	/** constants **/
+	private static final boolean DRAW_FPS = false;
+	
 	private static final int STATUS_NO_EVENT = -1;
 	
 	private static final int TARGET_FPS = 30;
@@ -62,8 +65,12 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private Paint blackPaint;
 	private Paint greyPaint;
 	private Paint darkGreyPaint;
+	private Paint creamPaint;
 	private Paint redPaint;
 	private Paint bluePaint;
+	
+	// typeface
+	private Typeface roboto;
 	
 	private float cachedWidthScale;
 	private float cachedHeightScale;
@@ -167,10 +174,15 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		greyPaint.setARGB(255, 179, 179, 179);
 		darkGreyPaint = new Paint();
 		darkGreyPaint.setARGB(255, 112, 112, 112);
+		creamPaint = new Paint();
+		creamPaint.setARGB(255, 222, 222, 222);
 		redPaint = new Paint();
 		redPaint.setColor(Color.RED);
 		bluePaint = new Paint();
 		bluePaint.setARGB(255, 0, 94, 155);
+		
+		roboto = Typeface.create("Roboto", Typeface.NORMAL);
+		
 	}
 	 
 	float getTextCenterOffset(String text, Paint paint) {
@@ -283,18 +295,19 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		float widthScale = getWidthScale();
 		float heightScale = getHeightScale();
 		
-		//canvas.drawColor(Color.BLACK); // blank the screen
-		getBackgroundGradientDrawable().draw(canvas);
+		canvas.drawColor(creamPaint.getColor()); // blank the screen
+		//getBackgroundGradientDrawable().draw(canvas);
 		
 		// draw the bearing information
-		greyPaint.setTextSize(70f);
-		canvas.drawText(bearingText, (BEARING_X * widthScale) - getTextCenterOffset(bearingText, greyPaint), BEARING_Y * heightScale, greyPaint);
+		blackPaint.setTextSize(70f);
+		blackPaint.setTypeface(roboto);
+		canvas.drawText(bearingText, (BEARING_X * widthScale) - getTextCenterOffset(bearingText, blackPaint), BEARING_Y * heightScale, blackPaint);
 		
 		// only draw the declenation text in true north mode
 		if(useTrueNorth()) {
-			greyPaint.setTextSize(25f);
-			canvas.drawText(declenationText, (BEARING_X * widthScale) - getTextCenterOffset(declenationText, greyPaint), 
-					(BEARING_Y + DECLENATION_VARIATION_OFFSET) * heightScale, greyPaint);
+			blackPaint.setTextSize(25f);
+			canvas.drawText(declenationText, (BEARING_X * widthScale) - getTextCenterOffset(declenationText, blackPaint), 
+					(BEARING_Y + DECLENATION_VARIATION_OFFSET) * heightScale, blackPaint);
 		}
 		
 		// draw the inside of the compass card
@@ -350,12 +363,16 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		canvas.drawCircle(COMPASS_CENTER_X * widthScale, COMPASS_CENTER_Y * heightScale, cardDiameter / 2 + 2f, darkGreyPaint);
 		canvas.drawLine(COMPASS_CENTER_X * widthScale, cardY, COMPASS_CENTER_X * widthScale, cardY + ((1 - INNER_COMPASS_CARD_RATIO) * cardDiameter / 2), darkGreyPaint);
 		darkGreyPaint.setStyle(Paint.Style.FILL);
-				
+		
+		
 		// draw the fps
-		greyPaint.setTextSize(15f);
-		canvas.drawText(Float.toString(currentFps) + " FPS", 1 * widthScale, 98 * heightScale, greyPaint);
+		if(DRAW_FPS) {
+			greyPaint.setTextSize(15f);
+			canvas.drawText(Float.toString(currentFps) + " FPS", 1 * widthScale, 98 * heightScale, greyPaint);
+		}
 	}
 	
+	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		if(event.getAction() == MotionEvent.ACTION_DOWN) {
 			float x = event.getX();
@@ -392,8 +409,10 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	
 	public void stopAnimation() {
 		isRunning = false; // stop the animation loop
-		float avgFps = (long)(totalFrames * 1000l) / (long)totalTime;
-		//Log.v("compass", "total frames:"+totalFrames+" total time:"+totalTime+" avg. fps:"+Float.toString(avgFps));
+		float avgFps = (totalFrames * 1000l) / totalTime;
+		if(DRAW_FPS) {
+			Log.v("compass", "total frames:"+totalFrames+" total time:"+totalTime+" avg. fps:"+Float.toString(avgFps));
+		}
 	}
 	
 	public void startAnimation() {

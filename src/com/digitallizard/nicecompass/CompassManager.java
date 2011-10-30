@@ -214,7 +214,12 @@ public class CompassManager implements SensorEventListener {
 	public void registerSensors() {
 		if(!sensorsRegistered) {
 			// register our sensor listeners
-			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_UPDATE_MIN_TIME, LOCATION_UPDATE_MIN_DISTANCE, locationListener);
+			// an exception will be thrown if the network provider does not exist
+			try {
+				locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_UPDATE_MIN_TIME, LOCATION_UPDATE_MIN_DISTANCE, locationListener);
+			} catch(IllegalArgumentException e) {
+				// TODO: tell the user that their device does not provide network location data
+			}
 			sensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_UI);
 			sensorManager.registerListener(this, accelSensor, SensorManager.SENSOR_DELAY_UI);
 			setSensorHasNewData(true);
