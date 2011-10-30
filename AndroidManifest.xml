@@ -20,6 +20,6 @@
                 <category android:name="android.intent.category.LAUNCHER"></category>
             </intent-filter>
         </activity>
-        <activity android:name="HelpActivity" android:theme="@style/compassTheme" android:label="Help"></activity>
+        <activity android:name="HelpActivity" android:theme="@style/compassTheme" android:label="Help" android:screenOrientation="portrait"></activity>
     </application>
 </manifest>
