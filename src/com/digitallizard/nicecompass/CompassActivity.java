@@ -6,6 +6,7 @@
  ******************************************************************************/
 package com.digitallizard.nicecompass;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -26,16 +27,18 @@ public class CompassActivity extends Activity {
 	private LinearLayout surfaceContainer;
 	
     @Override
-	public boolean onOptionsItemSelected(MenuItem item){
+	public boolean onOptionsItemSelected(MenuItem item) {
     	if(item.getTitle().equals(getResources().getString(R.string.menu_title_help))){
     		Intent intent = new Intent(this, HelpActivity.class);
     		startActivity(intent);
+    		return true; //we have received the press so we can report true
+    	} else {
+    		return super.onOptionsItemSelected(item);
     	}
-    	return true; //we have received the press so we can report true
     }
     
     @Override
-	public boolean onCreateOptionsMenu(Menu menu){
+	public boolean onCreateOptionsMenu(Menu menu) {
     	super.onCreateOptionsMenu(menu);
     	// inflate the menu XML file
     	MenuInflater menuInflater = new MenuInflater(this);

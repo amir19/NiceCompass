@@ -15,6 +15,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.GradientDrawable.Orientation;
 import android.util.Log;
@@ -62,8 +63,12 @@ public class CompassSurface extends SurfaceView implements Runnable {
 	private Paint blackPaint;
 	private Paint greyPaint;
 	private Paint darkGreyPaint;
+	private Paint creamPaint;
 	private Paint redPaint;
 	private Paint bluePaint;
+	
+	// typeface
+	private Typeface roboto;
 	
 	private float cachedWidthScale;
 	private float cachedHeightScale;
@@ -167,10 +172,15 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		greyPaint.setARGB(255, 179, 179, 179);
 		darkGreyPaint = new Paint();
 		darkGreyPaint.setARGB(255, 112, 112, 112);
+		creamPaint = new Paint();
+		creamPaint.setARGB(255, 222, 222, 222);
 		redPaint = new Paint();
 		redPaint.setColor(Color.RED);
 		bluePaint = new Paint();
 		bluePaint.setARGB(255, 0, 94, 155);
+		
+		roboto = Typeface.create("Roboto", Typeface.NORMAL);
+		
 	}
 	 
 	float getTextCenterOffset(String text, Paint paint) {
@@ -283,18 +293,19 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		float widthScale = getWidthScale();
 		float heightScale = getHeightScale();
 		
-		//canvas.drawColor(Color.BLACK); // blank the screen
-		getBackgroundGradientDrawable().draw(canvas);
+		canvas.drawColor(creamPaint.getColor()); // blank the screen
+		//getBackgroundGradientDrawable().draw(canvas);
 		
 		// draw the bearing information
-		greyPaint.setTextSize(70f);
-		canvas.drawText(bearingText, (BEARING_X * widthScale) - getTextCenterOffset(bearingText, greyPaint), BEARING_Y * heightScale, greyPaint);
+		blackPaint.setTextSize(70f);
+		blackPaint.setTypeface(roboto);
+		canvas.drawText(bearingText, (BEARING_X * widthScale) - getTextCenterOffset(bearingText, blackPaint), BEARING_Y * heightScale, blackPaint);
 		
 		// only draw the declenation text in true north mode
 		if(useTrueNorth()) {
-			greyPaint.setTextSize(25f);
-			canvas.drawText(declenationText, (BEARING_X * widthScale) - getTextCenterOffset(declenationText, greyPaint), 
-					(BEARING_Y + DECLENATION_VARIATION_OFFSET) * heightScale, greyPaint);
+			blackPaint.setTextSize(25f);
+			canvas.drawText(declenationText, (BEARING_X * widthScale) - getTextCenterOffset(declenationText, blackPaint), 
+					(BEARING_Y + DECLENATION_VARIATION_OFFSET) * heightScale, blackPaint);
 		}
 		
 		// draw the inside of the compass card
@@ -334,7 +345,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		int cardX = (int)Math.floor(COMPASS_CENTER_X * widthScale - (cardDiameter / 2));
 		int cardY = (int)Math.floor(COMPASS_CENTER_Y * heightScale - (cardDiameter / 2));
 		Rect cardRect = new Rect(cardX, cardY, cardX + cardDiameter, cardY + cardDiameter);
-		canvas.drawBitmap(cardImage, null, cardRect, imagePaint);
+		//canvas.drawBitmap(cardImage, null, cardRect, imagePaint);
 		//canvas.restore();
 		
 		// draw the locked bearing
