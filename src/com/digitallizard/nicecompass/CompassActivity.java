@@ -12,7 +12,6 @@ import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.Menu;
-import android.support.v4.view.MenuInflater;
 import android.support.v4.view.MenuItem;
 import android.widget.LinearLayout;
 
