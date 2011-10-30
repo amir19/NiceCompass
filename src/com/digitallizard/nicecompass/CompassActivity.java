@@ -6,18 +6,17 @@
  ******************************************************************************/
 package com.digitallizard.nicecompass;
 
-import android.app.ActionBar;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.view.Menu;
+import android.support.v4.view.MenuInflater;
+import android.support.v4.view.MenuItem;
 import android.widget.LinearLayout;
 
-public class CompassActivity extends Activity {
+public class CompassActivity extends FragmentActivity {
 	public static final String PREF_FILE_NAME = "com.digitallizard.nicecompass_preferences";
 	public static final String PREFKEY_USE_TRUE_NORTH = "useTrueNorth";
 	public static final boolean DEFAULT_USE_TRUE_NORTH = true;
@@ -28,7 +27,7 @@ public class CompassActivity extends Activity {
 	
     @Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-    	if(item.getTitle().equals(getResources().getString(R.string.menu_title_help))){
+    	if(item.getItemId() == R.id.menuItemHelp){
     		Intent intent = new Intent(this, HelpActivity.class);
     		startActivity(intent);
     		return true; //we have received the press so we can report true
@@ -41,8 +40,7 @@ public class CompassActivity extends Activity {
 	public boolean onCreateOptionsMenu(Menu menu) {
     	super.onCreateOptionsMenu(menu);
     	// inflate the menu XML file
-    	MenuInflater menuInflater = new MenuInflater(this);
-    	menuInflater.inflate(R.menu.menu, menu);
+    	getMenuInflater().inflate(R.menu.menu, menu);
     	return true; // we have made the menu so we can return true
     }
 

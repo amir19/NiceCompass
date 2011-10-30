@@ -6,6 +6,9 @@ It should work on Android 1.6 and up, but has only been tested on 2.3 on a physi
 
 The project is licensed under the BSD License.
 
+We use the fantastic ActionBarSherlock library for backwards compatibility of Icecream Sandwich features to 2.3 and earlier:
+http://www.actionbarsherlock.com
+
 
 
 Copyright (c) 2011, Digital Lizard (Oscar Key, Thomas Boby)
