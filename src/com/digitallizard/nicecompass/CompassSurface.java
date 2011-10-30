@@ -24,6 +24,8 @@ import android.view.SurfaceView;
 
 public class CompassSurface extends SurfaceView implements Runnable {
 	/** constants **/
+	private static final boolean DRAW_FPS = false;
+	
 	private static final int STATUS_NO_EVENT = -1;
 	
 	private static final int TARGET_FPS = 30;
@@ -361,10 +363,13 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		canvas.drawCircle(COMPASS_CENTER_X * widthScale, COMPASS_CENTER_Y * heightScale, cardDiameter / 2 + 2f, darkGreyPaint);
 		canvas.drawLine(COMPASS_CENTER_X * widthScale, cardY, COMPASS_CENTER_X * widthScale, cardY + ((1 - INNER_COMPASS_CARD_RATIO) * cardDiameter / 2), darkGreyPaint);
 		darkGreyPaint.setStyle(Paint.Style.FILL);
-				
+		
+		
 		// draw the fps
-		greyPaint.setTextSize(15f);
-		canvas.drawText(Float.toString(currentFps) + " FPS", 1 * widthScale, 98 * heightScale, greyPaint);
+		if(DRAW_FPS) {
+			greyPaint.setTextSize(15f);
+			canvas.drawText(Float.toString(currentFps) + " FPS", 1 * widthScale, 98 * heightScale, greyPaint);
+		}
 	}
 	
 	@Override
