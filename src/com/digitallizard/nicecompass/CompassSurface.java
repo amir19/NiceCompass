@@ -347,7 +347,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		int cardX = (int)Math.floor(COMPASS_CENTER_X * widthScale - (cardDiameter / 2));
 		int cardY = (int)Math.floor(COMPASS_CENTER_Y * heightScale - (cardDiameter / 2));
 		Rect cardRect = new Rect(cardX, cardY, cardX + cardDiameter, cardY + cardDiameter);
-		//canvas.drawBitmap(cardImage, null, cardRect, imagePaint);
+		canvas.drawBitmap(cardImage, null, cardRect, imagePaint);
 		//canvas.restore();
 		
 		// draw the locked bearing
