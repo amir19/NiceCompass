@@ -98,6 +98,10 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		return bearingLocked;
 	}
 	
+	synchronized void setLockedBearing(int bearing) {
+		currentLockedBearing = bearing;
+	}
+	
 	synchronized float getLockedBearing() {
 		if(bearingLocked){
 			return currentLockedBearing;
@@ -264,7 +268,11 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		// add the magnetic 
 		bearingText += " " + CardinalConverter.convertUseTrueNorth(useTrueNorth());
 		
-		declenationText = "variation: "+declenationFormat.format(compass.getDeclination())+"\u00B0";
+		declenationText = "";
+		if(compass.isUsingManualDeclination()) {
+			declenationText += "manual ";
+		}
+		declenationText += "variation: "+declenationFormat.format(compass.getDeclination())+"\u00B0"; // u00B0 is degrees sign
 	}
 	
 	void update(float delta) {
@@ -407,6 +415,42 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		return useTrueNorth;
 	}
 	
+	public synchronized void setManualDeclination(float declination) {
+		// this is a thread safe wrapper
+		compass.setManualDeclination(declination);
+	}
+	
+	public synchronized void useAutoDeclination() {
+		// this is a thread safe wrapper
+		compass.useAutoDeclination();
+	}
+	
+	public float getManualDeclination() {
+		// return the current declination, manual or not
+		return compass.getDeclination();
+	}
+	
+	public boolean isUsingManualDeclination() {
+		return compass.isUsingManualDeclination();
+	}
+	
+	public void lockBearingTo(int bearing) {
+		// check if the bearing is locked or not
+		if(!isBearingLocked()) {
+			// lock the bearing
+			toggleBearingLock();
+		}
+		// set the locked bearing to what was requested
+		setLockedBearing(bearing);
+	}
+	
+	public void unlockBearing() {
+		// toggle the lock if the bearing is locked
+		if(isBearingLocked()) {
+			toggleBearingLock();
+		}
+	}
+	
 	public void stopAnimation() {
 		isRunning = false; // stop the animation loop
 		float avgFps = (totalFrames * 1000l) / totalTime;
@@ -467,7 +511,7 @@ public class CompassSurface extends SurfaceView implements Runnable {
 		super(context);
 		this.compass = compass;
 		useTrueNorth(useTrueNorth);
-		
+				
 		// initialize the number formatters
 		bearingFormat = new DecimalFormat("000");
 		declenationFormat = new DecimalFormat("00.0");
