@@ -14,4 +14,8 @@
     <string name="preference_key_north">north</string>
     <string name="settings_summary_north">True or magnetic north?</string>
     <string name="menu_title_help">Help</string>
+    <string name="menu_title_manual_variation">Manual variation</string>
+    <string name="menu_title_manual_locked_brearing">Manual locked bearing</string>
+    <string name="bearing_selection_dialog_set_button">Set</string>
+    <string name="bearing_selection_dialog_auto_button">Auto</string>
 </resources>

@@ -41,6 +41,9 @@ public class CompassManager implements SensorEventListener {
 	private Location locationCache;
 	private int status;
 	
+	private boolean useManualDeclination;
+	private float manualDeclination;
+	
 	
 	private synchronized float[] getAccelValues() {
 		return accelValues;
@@ -156,6 +159,11 @@ public class CompassManager implements SensorEventListener {
 	}
 	
 	public float getDeclination() {
+		// if the user wanted manual declination, return this
+		if(useManualDeclination) {
+			return manualDeclination; // this exits here
+		}
+		
 		// if there is no geomagnetic field, just use the normal bearing
 		if(getGeoField() != null) {
 			return getGeoField().getDeclination(); // convert magnetic north into true north
@@ -163,6 +171,19 @@ public class CompassManager implements SensorEventListener {
 		else {
 			return 0f; // set the declination to 0
 		}
+	}
+	
+	public synchronized void setManualDeclination(float declination) {
+		useManualDeclination = true;
+		manualDeclination = declination;
+	}
+	
+	public synchronized void useAutoDeclination() {
+		useManualDeclination = false;
+	}
+	
+	public boolean isUsingManualDeclination() {
+		return useManualDeclination;
 	}
 	
 	public String getCardinal(boolean trueNorth) {
